@@ -41,5 +41,3 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/etiopi
 ## License
 
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
-
->>>>>>> 4fb1e136f2a53b9bf6ed741b04cd48b1efaeba9e
