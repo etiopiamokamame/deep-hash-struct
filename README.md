@@ -3,12 +3,17 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> a04afc2... lf => crlf
 =======
 >>>>>>> add merge, fetch and initialize
 =======
 >>>>>>> add merge, fetch and initialize
+=======
+=======
+>>>>>>> a04afc2... lf => crlf
+>>>>>>> lf => crlf
 # Deep::Hash::Struct
 
 Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/deep/hash/struct`. To experiment with that code, run `bin/console` for an interactive prompt.
@@ -54,6 +59,9 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/etiopi
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> lf => crlf
 
 =======
 # Deep::Hash::Struct
@@ -991,4 +999,9 @@ The gem is available as open source under the terms of the [MIT License](http://
 =======
 
 >>>>>>> 4fb1e13... add merge, fetch and initialize
+<<<<<<< HEAD
 >>>>>>> add merge, fetch and initialize
+=======
+=======
+>>>>>>> a04afc2... lf => crlf
+>>>>>>> lf => crlf
