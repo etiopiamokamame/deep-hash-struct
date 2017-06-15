@@ -283,6 +283,14 @@ wrapper.delete_if{ |k, v| k == :a || v == 2 }.to_h # => {:c=>3}
 wrapper.keys                                       # => [:c]
 ```
 
+### #reject
+```ruby
+wrapper.a = 1
+wrapper.b = 2
+wrapper.c = 3
+wrapper.reject { |k, v| v > 2 }.to_h # => {:a=>1, :b=>2}
+```
+
 ### #reject!
 bang reject method
 
@@ -339,7 +347,7 @@ wrapper.a = 3
 wrapper.sort # => [[:a, 3], [:b, 2], [:c, 1]]
 ```
 
-### #sort
+### #shift
 ```ruby
 wrapper.a = 1
 wrapper.b = 2
