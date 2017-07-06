@@ -75,7 +75,7 @@ Or install it yourself as:
 
     $ gem install deep-hash-struct
 
-## Usage
+## Wrapper Class Usage
 The basic usage is the same as Hash Class.
 
 <<<<<<< HEAD
@@ -433,15 +433,15 @@ wrapper.to_h  # => {:b=>2, :c=>3}
 wrapper.a   = 1
 wrapper.b   = nil
 wrapper.c.a = 2
-wrapper.c.b
-wrapper.c.c = ""
+wrapper.c.b = ""
+wrapper.d.a = nil
 
-wrapper.keys           # => [:a, :b, :c]
-wrapper.c.keys         # => [:a, :b, :c]
-wrapper.compact.keys   # => [:a, :c]
-wrapper.compact.c.keys # => [:a, :b, :c]
-wrapper.keys           # => [:a, :b, :c]
-wrapper.c.keys         # => [:a, :b, :c]
+wrapper.keys           # => [:a, :b, :c, :d]
+wrapper.c.keys         # => [:a, :b]
+wrapper.compact.keys   # => [:a, :c, :d]
+wrapper.compact.c.keys # => [:a, :b]
+wrapper.keys           # => [:a, :b, :c, :d]
+wrapper.c.keys         # => [:a, :b]
 ```
 
 ### #compact!
@@ -452,15 +452,15 @@ bang compact method
 wrapper.a   = 1
 wrapper.b   = nil
 wrapper.c.a = 2
-wrapper.c.b
-wrapper.c.c = ""
+wrapper.c.b = ""
+wrapper.d.a = nil
 
-wrapper.keys                # => [:a, :b, :c]
-wrapper.c.keys              # => [:a, :b, :c]
+wrapper.keys                # => [:a, :b, :c, :d]
+wrapper.c.keys              # => [:a, :b]
 wrapper.deep_compact.keys   # => [:a, :c]
-wrapper.deep_compact.c.keys # => [:a, :c]
-wrapper.keys                # => [:a, :b, :c]
-wrapper.c.keys              # => [:a, :b, :c]
+wrapper.deep_compact.c.keys # => [:a, :b]
+wrapper.keys                # => [:a, :b, :c, :d]
+wrapper.c.keys              # => [:a, :b]
 ```
 
 ### #deep_compact!
@@ -496,6 +496,456 @@ wrapper.a   = 1
 wrapper.b   = 2
 wrapper.c.a = 3
 wrapper.to_json # => "{\"a\":1,\"b\":2,\"c\":{\"a\":3}}"
+```
+
+### #max_stages
+```ruby
+wrapper.a     = 1
+wrapper.b.a   = 2
+wrapper.b.b   = 3
+wrapper.c.a.b = 4
+wrapper.c.a.c = 5
+wrapper.c.a.d = 6
+
+wrapper.max_stages   # => 3
+wrapper.b.max_stages # => 1
+wrapper.c.max_stages # => 2
+```
+
+### #min_stages
+```ruby
+wrapper.a     = 1
+wrapper.b.a   = 2
+wrapper.b.b   = 3
+wrapper.c.a.b = 4
+wrapper.c.a.c = 5
+wrapper.c.a.d = 6
+
+wrapper.min_stages   # => 1
+wrapper.b.min_stages # => 1
+wrapper.c.min_stages # => 2
+```
+
+## Dashboard Class Usage
+It is used like a two-dimensional array representing a table.
+
+### Add matrix table
+```ruby
+dashboard = Deep::Hash::Struct::Dashboard.new
+dashboard.add_table(matrix: true, side_header: "sh") do |t|
+  t.add_header do |h|
+    h.a   = "h1"
+    h[:b] = "h2"
+    h.add :c, "h3"
+  end
+
+  t.add_side do |s|
+    s.a   = "s1"
+    s[:b] = "s2"
+    s.add :c, "s3"
+  end
+
+  t.add_body do |row|
+    row.a.a     = 11
+    row.a[:b]   = 12
+    row[:a][:c] = 13
+    row[:b].a   = 14
+    row.b.add :b, 15
+    row.b.c     = 16
+    row.c.a     = 17
+    row.c.b     = 18
+    row.c.c     = 19
+  end
+end
+
+dashboard.tables # => [#<Table matrix=true>]
+
+table = "<table>\n"
+dashboard.tables[0].each do |rows|
+  table << "  <tr>\n"
+  rows.each do |row|
+    if row.header? || row.side?
+      table << "    <th>#{row.name}</th>\n"
+    else
+      table << "    <td>#{row.value}</td>\n"
+    end
+  end
+  table << "  </tr>\n"
+end
+table << "</table>\n"
+
+puts table
+# => <table>
+# =>   <tr>
+# =>     <th>sh</th>
+# =>     <th>h1</th>
+# =>     <th>h2</th>
+# =>     <th>h3</th>
+# =>   </tr>
+# =>   <tr>
+# =>     <th>s1</th>
+# =>     <td>11</td>
+# =>     <td>14</td>
+# =>     <td>17</td>
+# =>   </tr>
+# =>   <tr>
+# =>     <th>s2</th>
+# =>     <td>12</td>
+# =>     <td>15</td>
+# =>     <td>18</td>
+# =>   </tr>
+# =>   <tr>
+# =>     <th>s3</th>
+# =>     <td>13</td>
+# =>     <td>16</td>
+# =>     <td>19</td>
+# =>   </tr>
+# => </table>
+```
+
+### Add segment table
+```ruby
+dashboard = Deep::Hash::Struct::Dashboard.new
+dashboard.add_table do |t|
+  t.add_header do |h|
+    h.a   = "h1"
+    h[:b] = "h2"
+    h.add :c, "h3"
+  end
+
+  t.add_body do |row|
+    row.a = 11
+    row.b = 12
+    row.c = 13
+  end
+
+  t.add_body do |row|
+    row.c = 16
+    row.b = 15
+    row.a = 14
+  end
+
+  t.add_body do |row|
+    row.c = 19
+    row.a = 17
+    row.b = 18
+  end
+end
+
+dashboard.tables # => [#<Table matrix=false>]
+
+table = "<table>\n"
+dashboard.tables[0].each do |rows|
+  table << "  <tr>\n"
+  rows.each do |row|
+    if row.header?
+      table << "    <th>#{row.name}</th>\n"
+    else
+      table << "    <td>#{row.value}</td>\n"
+    end
+  end
+  table << "  </tr>\n"
+end
+table << "</table>\n"
+
+puts table
+# => <table>
+# =>   <tr>
+# =>     <th>h1</th>
+# =>     <th>h2</th>
+# =>     <th>h3</th>
+# =>   </tr>
+# =>   <tr>
+# =>     <td>11</td>
+# =>     <td>12</td>
+# =>     <td>13</td>
+# =>   </tr>
+# =>   <tr>
+# =>     <td>14</td>
+# =>     <td>15</td>
+# =>     <td>16</td>
+# =>   </tr>
+# =>   <tr>
+# =>     <td>17</td>
+# =>     <td>18</td>
+# =>     <td>19</td>
+# =>   </tr>
+# => </table>
+```
+
+### Unset value to matrix table
+```ruby
+dashboard = Deep::Hash::Struct::Dashboard.new
+dashboard.add_table(matrix: true) do |t|
+  t.add_header do |h|
+    h.a   = "h1"
+    h[:b] = "h2"
+    h.add :c, "h3"
+  end
+
+  t.add_side do |s|
+    s.a   = "s1"
+    s[:b] = "s2"
+    s.add :c, "s3"
+  end
+
+  t.add_body do |row|
+    row.a.b = 2
+    row.a.c = 3
+    row.b.a = 4
+    row.b.c = 6
+    row.c.a = 7
+    row.c.b = 8
+  end
+end
+
+dashboard.tables # => [#<Table matrix=true>]
+
+table = "<table>\n"
+dashboard.tables[0].each do |rows|
+  table << "  <tr>\n"
+  rows.each do |row|
+    if row.header? || row.side?
+      table << "    <th>#{row.name}</th>\n"
+    else
+      table << "    <td>#{row.value}</td>\n"
+    end
+  end
+  table << "  </tr>\n"
+end
+table << "</table>\n"
+
+puts table
+# => <table>
+# =>  <tr>
+# =>    <th></th>
+# =>    <th>h1</th>
+# =>    <th>h2</th>
+# =>    <th>h3</th>
+# =>  </tr>
+# =>  <tr>
+# =>    <th>s1</th>
+# =>    <td></td>
+# =>    <td>4</td>
+# =>    <td>7</td>
+# =>  </tr>
+# =>  <tr>
+# =>    <th>s2</th>
+# =>    <td>2</td>
+# =>    <td></td>
+# =>    <td>8</td>
+# =>  </tr>
+# =>  <tr>
+# =>    <th>s3</th>
+# =>    <td>3</td>
+# =>    <td>6</td>
+# =>    <td></td>
+# =>  </tr>
+# =></table>
+```
+### Unset value to segment table
+```ruby
+dashboard = Deep::Hash::Struct::Dashboard.new
+dashboard.add_table do |t|
+  t.add_header do |h|
+    h.a = "h1"
+    h.b = "h2"
+    h.c = "h3"
+  end
+
+  t.add_body do |row|
+    row.b = 2
+    row.c = 3
+  end
+
+  t.add_body do |row|
+    row.a = 4
+    row.c = 6
+  end
+
+  t.add_body do |row|
+    row.a = 7
+    row.b = 8
+  end
+end
+
+dashboard.tables # => [#<Table matrix=false>]
+
+table = "<table>\n"
+dashboard.tables[0].each do |rows|
+  table << "  <tr>\n"
+  rows.each do |row|
+    if row.header?
+      table << "    <th>#{row.name}</th>\n"
+    else
+      table << "    <td>#{row.value}</td>\n"
+    end
+  end
+  table << "  </tr>\n"
+end
+table << "</table>\n"
+
+puts table
+# => <table>
+# =>   <tr>
+# =>     <th>h1</th>
+# =>     <th>h2</th>
+# =>     <th>h3</th>
+# =>   </tr>
+# =>   <tr>
+# =>     <td></td>
+# =>     <td>2</td>
+# =>     <td>3</td>
+# =>   </tr>
+# =>   <tr>
+# =>     <td>4</td>
+# =>     <td></td>
+# =>     <td>6</td>
+# =>   </tr>
+# =>   <tr>
+# =>     <td>7</td>
+# =>     <td>8</td>
+# =>     <td></td>
+# =>   </tr>
+# => </table>
+```
+
+### Default to matrix table
+```ruby
+dashboard = Deep::Hash::Struct::Dashboard.new
+dashboard.add_table(matrix: true, default: 0) do |t|
+  t.add_header do |h|
+    h.a = "h1"
+    h.b = "h2"
+    h.c = "h3"
+  end
+
+  t.add_side do |s|
+    s.a = "s1"
+    s.b = "s2"
+    s.c = "s3"
+  end
+
+  t.add_body do |row|
+    row.a.b = 2
+    row.a.c = 3
+    row.b.a = 4
+    row.b.c = 6
+    row.c.a = 7
+    row.c.b = 8
+  end
+end
+
+dashboard.tables # => [#<Table matrix=true>]
+
+table = "<table>\n"
+dashboard.tables[0].each do |rows|
+  table << "  <tr>\n"
+  rows.each do |row|
+    if row.header? || row.side?
+      table << "    <th>#{row.name}</th>\n"
+    else
+      table << "    <td>#{row.value}</td>\n"
+    end
+  end
+  table << "  </tr>\n"
+end
+table << "</table>\n"
+
+puts table
+# => <table>
+# =>   <tr>
+# =>     <th></th>
+# =>     <th>h1</th>
+# =>     <th>h2</th>
+# =>     <th>h3</th>
+# =>   </tr>
+# =>   <tr>
+# =>     <th>s1</th>
+# =>     <td>0</td>
+# =>     <td>4</td>
+# =>     <td>7</td>
+# =>   </tr>
+# =>   <tr>
+# =>     <th>s2</th>
+# =>     <td>2</td>
+# =>     <td>0</td>
+# =>     <td>8</td>
+# =>   </tr>
+# =>   <tr>
+# =>     <th>s3</th>
+# =>     <td>3</td>
+# =>     <td>6</td>
+# =>     <td>0</td>
+# =>   </tr>
+# => </table>
+```
+
+### Default to segment table
+```ruby
+dashboard = Deep::Hash::Struct::Dashboard.new
+dashboard.add_table(default: 0) do |t|
+  t.add_header do |h|
+    h.a = "h1"
+    h.b = "h2"
+    h.c = "h3"
+  end
+
+  t.add_body do |row|
+    row.b = 2
+    row.c = 3
+  end
+
+  t.add_body do |row|
+    row.a = 4
+    row.c = 6
+  end
+
+  t.add_body do |row|
+    row.a = 7
+    row.b = 8
+  end
+end
+
+dashboard.tables # => [#<Table matrix=false>]
+
+table = "<table>\n"
+dashboard.tables[0].each do |rows|
+  table << "  <tr>\n"
+  rows.each do |row|
+    if row.header?
+      table << "    <th>#{row.name}</th>\n"
+    else
+      table << "    <td>#{row.value}</td>\n"
+    end
+  end
+  table << "  </tr>\n"
+end
+table << "</table>\n"
+
+puts table
+# => <table>
+# =>   <tr>
+# =>     <th>h1</th>
+# =>     <th>h2</th>
+# =>     <th>h3</th>
+# =>   </tr>
+# =>   <tr>
+# =>     <td>0</td>
+# =>     <td>2</td>
+# =>     <td>3</td>
+# =>   </tr>
+# =>   <tr>
+# =>     <td>4</td>
+# =>     <td>0</td>
+# =>     <td>6</td>
+# =>   </tr>
+# =>   <tr>
+# =>     <td>7</td>
+# =>     <td>8</td>
+# =>     <td>0</td>
+# =>   </tr>
+# => </table>
 ```
 
 ## Contributing

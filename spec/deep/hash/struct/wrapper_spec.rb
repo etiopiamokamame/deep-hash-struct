@@ -1,11 +1,7 @@
 require "spec_helper"
 
-describe Deep::Hash::Struct do
-  it "has a version number" do
-    expect(described_class::VERSION).not_to be nil
-  end
-
-  let(:wrapper) { described_class::Wrapper.new }
+describe Deep::Hash::Struct::Wrapper do
+  let(:wrapper) { described_class.new }
 
   describe "#initialize" do
     before do
@@ -28,7 +24,7 @@ describe Deep::Hash::Struct do
           }
         }
       }
-      @init_wrapper = described_class::Wrapper.new(expected)
+      @init_wrapper = described_class.new(expected)
     end
 
     let(:init_wrapper) { @init_wrapper }
@@ -72,13 +68,13 @@ describe Deep::Hash::Struct do
 
   describe "#keys" do
     before do
-      @added_one_wrapper = wrapper.dup
-      @added_one_wrapper.key
+      @added_one_wrapper     = wrapper.dup
+      @added_one_wrapper.key = :key
 
-      @added_some_wrapper = wrapper.dup
-      @added_some_wrapper.one
-      @added_some_wrapper.two
-      @added_some_wrapper.three
+      @added_some_wrapper       = wrapper.dup
+      @added_some_wrapper.one   = :one
+      @added_some_wrapper.two   = :two
+      @added_some_wrapper.three = :three
     end
 
     let(:added_one_wrapper) { @added_one_wrapper }
@@ -148,6 +144,20 @@ describe Deep::Hash::Struct do
     it "set value with a string" do
       wrapper["key"] = "abc"
       expect(wrapper[:key]).to eq("abc")
+    end
+  end
+
+  describe "#add" do
+    it "defined method" do
+      expect(wrapper.respond_to?(:add)).to be_truthy
+    end
+
+    it "set value" do
+      wrapper.add :a,  1
+      wrapper.add "b", 2
+      wrapper.add :c,  { a: 3 }
+
+      expect(wrapper.to_h).to eq({ a: 1, b: 2, c: { a: 3 } })
     end
   end
 
@@ -794,31 +804,9 @@ describe Deep::Hash::Struct do
     it "getting default value" do
       wrapper.a.default = 0
       wrapper.b.default = []
+
       expect(wrapper.a.a).to eq(0)
       expect(wrapper.b.a).to eq([])
-    end
-  end
-
-  describe "#default=" do
-    it "defined method" do
-      expect(wrapper.respond_to?(:default=)).to be_truthy
-    end
-
-    it "setting default value" do
-      wrapper.a.default = []
-      wrapper.a.a      << 1
-      wrapper.a.b      << 2
-      wrapper.a.b      << 3
-
-      wrapper.b.default = 0
-      wrapper.b.a      += 1
-      wrapper.b.b      += 2
-      wrapper.b.b      += 3
-
-      expect(wrapper.a.a).to eq([1])
-      expect(wrapper.a.b).to eq([2, 3])
-      expect(wrapper.b.a).to eq(1)
-      expect(wrapper.b.b).to eq(5)
     end
   end
 
@@ -836,8 +824,20 @@ describe Deep::Hash::Struct do
         [k, v.respond_to?(:to_h) ? v.to_h : v]
       end
 
-      expected = described_class::Wrapper.new(a: 3)
+      expected = described_class.new(a: 3)
       expect(result).to eq([[:a, 1], [:b, 2], [:c, expected.to_h]])
+    end
+
+    it "Omitting the block returns the Enumerator class" do
+      wrapper.a = 1
+      wrapper.b = 2
+      wrapper.c = 3
+
+      expect(wrapper.map.class).to eq(Enumerator)
+      result = wrapper.map.with_index(1) do |(k, v), i|
+        [k, v, i]
+      end
+      expect(result).to eq([[:a, 1, 1], [:b, 2, 2], [:c, 3, 3]])
     end
   end
 
@@ -855,7 +855,7 @@ describe Deep::Hash::Struct do
         [k, v.respond_to?(:to_h) ? v.to_h : v]
       end
 
-      expected = described_class::Wrapper.new(a: 3)
+      expected = described_class.new(a: 3)
       expect(result).to eq([[:a, 1], [:b, 2], [:c, expected.to_h]])
     end
   end
@@ -1340,7 +1340,7 @@ describe Deep::Hash::Struct do
       wrapper.a   = 1
       wrapper.b   = nil
       wrapper.c.a = 2
-      wrapper.c.b
+      wrapper.c.b = nil
       wrapper.c.c = ""
 
       expect(wrapper.keys).to           eq([:a, :b, :c])
@@ -1361,7 +1361,7 @@ describe Deep::Hash::Struct do
       wrapper.a   = 1
       wrapper.b   = nil
       wrapper.c.a = 2
-      wrapper.c.b
+      wrapper.c.b = nil
       wrapper.c.c = ""
 
       expect(wrapper.keys).to            eq([:a, :b, :c])
@@ -1382,14 +1382,16 @@ describe Deep::Hash::Struct do
       wrapper.a   = 1
       wrapper.b   = nil
       wrapper.c.a = 2
-      wrapper.c.b
+      wrapper.c.b = nil
       wrapper.c.c = ""
+      wrapper.d.a = nil
 
-      expect(wrapper.keys).to                eq([:a, :b, :c])
+      expect(wrapper.keys).to                eq([:a, :b, :c, :d])
       expect(wrapper.c.keys).to              eq([:a, :b, :c])
+      expect(wrapper.d.keys).to              eq([:a])
       expect(wrapper.deep_compact.keys).to   eq([:a, :c])
       expect(wrapper.deep_compact.c.keys).to eq([:a, :c])
-      expect(wrapper.keys).to                eq([:a, :b, :c])
+      expect(wrapper.keys).to                eq([:a, :b, :c, :d])
       expect(wrapper.c.keys).to              eq([:a, :b, :c])
     end
   end
@@ -1403,10 +1405,11 @@ describe Deep::Hash::Struct do
       wrapper.a   = 1
       wrapper.b   = nil
       wrapper.c.a = 2
-      wrapper.c.b
+      wrapper.c.b = nil
       wrapper.c.c = ""
+      wrapper.d.a = nil
 
-      expect(wrapper.keys).to                 eq([:a, :b, :c])
+      expect(wrapper.keys).to                 eq([:a, :b, :c, :d])
       expect(wrapper.c.keys).to               eq([:a, :b, :c])
       expect(wrapper.deep_compact!.keys).to   eq([:a, :c])
       expect(wrapper.deep_compact!.c.keys).to eq([:a, :c])
@@ -1456,6 +1459,7 @@ describe Deep::Hash::Struct do
       wrapper.a   = 1
       wrapper.b   = 2
       wrapper.c.a = 3
+      wrapper.c.b
 
       expect(wrapper.to_hash).to eq({ a: 1, b: 2, c: { a: 3 } })
     end
@@ -1470,6 +1474,7 @@ describe Deep::Hash::Struct do
       wrapper.a   = 1
       wrapper.b   = 2
       wrapper.c.a = 3
+      wrapper.c.b
 
       expect(wrapper.to_h).to eq({ a: 1, b: 2, c: { a: 3 } })
     end
@@ -1486,6 +1491,72 @@ describe Deep::Hash::Struct do
       wrapper.c.a = 3
 
       expect(wrapper.to_json).to eq({ a: 1, b: 2, c: { a: 3 } }.to_json)
+    end
+  end
+
+  describe "#max_stages" do
+    it "defined method" do
+      expect(wrapper.respond_to?(:max_stages)).to be_truthy
+    end
+
+    it "Returns the max stage number" do
+      wrapper.a     = 1
+      wrapper.b.a   = 2
+      wrapper.b.b   = 3
+      wrapper.c.a.b = 4
+      wrapper.c.a.c = 5
+      wrapper.c.a.d = 6
+
+      expect(wrapper.max_stages).to   eq(3)
+      expect(wrapper.b.max_stages).to eq(1)
+      expect(wrapper.c.max_stages).to eq(2)
+    end
+  end
+
+  describe "#min_stages" do
+    it "defined method" do
+      expect(wrapper.respond_to?(:min_stages)).to be_truthy
+    end
+
+    it "Returns the min stage number" do
+      wrapper.a     = 1
+      wrapper.b.a   = 2
+      wrapper.b.b   = 3
+      wrapper.c.a.b = 4
+      wrapper.c.a.c = 5
+      wrapper.c.a.d = 6
+
+      expect(wrapper.min_stages).to   eq(1)
+      expect(wrapper.b.min_stages).to eq(1)
+      expect(wrapper.c.min_stages).to eq(2)
+    end
+  end
+
+  describe "#to_table" do
+    it "defined method" do
+      expect(wrapper.respond_to?(:to_table)).to be_truthy
+    end
+
+    it "Convert to Table Array" do
+      wrapper.a   = 1
+      wrapper.b.a = 2
+      wrapper.c.a = 3
+      wrapper.c.b = 4
+
+      expect(wrapper.to_table).to eq([[:a, :b, :c], [1, [[:a], [2]], [[:a, :b], [3, 4]]]])
+    end
+  end
+
+  describe "#deep_dup" do
+    it "defined method" do
+      expect(wrapper.respond_to?(:deep_dup)).to be_truthy
+    end
+
+    it "Multi-tier dup" do
+      wrapper.a.a = 1
+
+      expect(wrapper.deep_dup.object_id).not_to   eq(wrapper.object_id)
+      expect(wrapper.deep_dup.a.object_id).not_to eq(wrapper.a.object_id)
     end
   end
 end

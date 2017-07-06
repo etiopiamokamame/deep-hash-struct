@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["haimaki4222@gmail.com"]
 
   spec.summary       = "Convenient hash."
-  spec.description   = "A slightly useful hash-like object."
+  spec.description   = "We can handle data specialized for table display, storage of values can be handled like Struct corresponding to multiple layers."
   spec.homepage      = "https://github.com/etiopiamokamame/deep-hash-struct"
   spec.license       = "MIT"
 
