@@ -326,9 +326,9 @@ module Deep
         end
 
         def inject(init = 0)
-          value = init.dup
+          value = [Float, Fixnum].include?(init.class) ? init : init.dup
           each do |k, v|
-            val = yield init.dup, [k, v]
+            val = yield [Float, Fixnum].include?(init.class) ? init : init.dup, [k, v]
             next if val.nil?
             value += val
           end
