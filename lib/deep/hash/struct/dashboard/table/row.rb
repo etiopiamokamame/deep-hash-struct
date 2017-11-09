@@ -28,6 +28,10 @@ module Deep
               header? && side?
             end
 
+            def side_or_header?
+              header? || side?
+            end
+
             private
 
             def default_options
