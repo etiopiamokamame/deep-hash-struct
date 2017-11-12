@@ -876,6 +876,157 @@ puts table
 # => </table>
 ```
 
+### Create like html matrix table
+```
+dashboard = Deep::Hash::Struct::Dashboard.new
+dashboard.add_table(matrix: true) do |t|
+  t.tr do |tr|
+    tr.th "header1"
+    tr.th "header2"
+    tr.th "header3"
+  end
+
+  t.tr side: true do |tr|
+    tr.th "side1"
+    tr.td 1
+    tr.td 2
+    tr.td 3
+  end
+
+  t.tr side: true do |tr|
+    tr.th "side2"
+    tr.td 4
+    tr.td 5
+    tr.td 6
+  end
+
+  t.tr side: true do |tr|
+    tr.th "side3"
+    tr.td 7
+    tr.td 8
+    tr.td 9
+  end
+end
+
+result = "<table>\n"
+dashboard.each do |t|
+  t.each do |tr|
+    result << "  <tr>\n"
+    tr.each do |cell|
+      if cell.side_or_header?
+        result << "    <th>#{cell.name}</th>"
+      else
+        result << "    <td>#{cell.value}</td>"
+      end
+      result << "\n"
+    end
+    result << "  </tr>\n"
+  end
+end
+result << "</table>\n"
+
+puts table
+
+# => <table>
+# =>   <tr>
+# =>     <th></th>
+# =>     <th>header1</th>
+# =>     <th>header2</th>
+# =>     <th>header3</th>
+# =>   </tr>
+# =>   <tr>
+# =>     <th>side1</th>
+# =>     <td>1</td>
+# =>     <td>2</td>
+# =>     <td>3</td>
+# =>   </tr>
+# =>   <tr>
+# =>     <th>side2</th>
+# =>     <td>4</td>
+# =>     <td>5</td>
+# =>     <td>6</td>
+# =>   </tr>
+# =>   <tr>
+# =>     <th>side3</th>
+# =>     <td>7</td>
+# =>     <td>8</td>
+# =>     <td>9</td>
+# =>   </tr>
+# => </table>
+```
+
+### Create like html segment table
+```
+dashboard = Deep::Hash::Struct::Dashboard.new
+dashboard.add_table do |t|
+  t.tr do |tr|
+    tr.th "header1"
+    tr.th "header2"
+    tr.th "header3"
+  end
+
+  t.tr do |tr|
+    tr.td 1
+    tr.td 2
+    tr.td 3
+  end
+
+  t.tr do |tr|
+    tr.td 4
+    tr.td 5
+    tr.td 6
+  end
+
+  t.tr do |tr|
+    tr.td 7
+    tr.td 8
+    tr.td 9
+  end
+end
+
+result = "<table>\n"
+dashboard.each do |t|
+  t.each do |tr|
+    result << "  <tr>\n"
+    tr.each do |cell|
+      if cell.side_or_header?
+        result << "    <th>#{cell.name}</th>"
+      else
+        result << "    <td>#{cell.value}</td>"
+      end
+      result << "\n"
+    end
+    result << "  </tr>\n"
+  end
+end
+result << "</table>\n"
+
+puts table
+
+# => <table>
+# =>   <tr>
+# =>     <th>header1</th>
+# =>     <th>header2</th>
+# =>     <th>header3</th>
+# =>   </tr>
+# =>   <tr>
+# =>     <td>1</td>
+# =>     <td>2</td>
+# =>     <td>3</td>
+# =>   </tr>
+# =>   <tr>
+# =>     <td>4</td>
+# =>     <td>5</td>
+# =>     <td>6</td>
+# =>   </tr>
+# =>   <tr>
+# =>     <td>7</td>
+# =>     <td>8</td>
+# =>     <td>9</td>
+# =>   </tr>
+# => </table>
+```
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/etiopiamokamame/deep-hash-struct. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
