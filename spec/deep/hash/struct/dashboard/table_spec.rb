@@ -274,4 +274,96 @@ describe Deep::Hash::Struct::Dashboard::Table do
       expect(result).to eq([[1, 0], [2, 1], [3, 2]])
     end
   end
+
+  describe "#tr" do
+    context "Add header for String value" do
+      before do
+        table.tr do |tr|
+          tr.th "A"
+          tr.th "B"
+          tr.th "C"
+        end
+      end
+
+      it "Add header" do
+        expect(table.header.values).to eq(%w(A B C))
+        expect(table.body.count).to    be_zero
+      end
+    end
+
+    context "Add header for Hash key value" do
+      before do
+        table.tr do |tr|
+          tr.th({ key: "a", value: "A" })
+          tr.th({ key: "b", value: "B" })
+          tr.th({ key: "c", value: "C" })
+        end
+      end
+
+      it "Add header" do
+        expect(table.header.to_h).to eq({ a: "A", b: "B", c: "C" })
+        expect(table.body.count).to  be_zero
+      end
+    end
+
+    context "Add header for Hash" do
+      before do
+        table.tr do |tr|
+          tr.th a: "A"
+          tr.th b: "B"
+          tr.th c: "C"
+        end
+      end
+
+      it "Add header" do
+        expect(table.header.to_h).to eq({ a: "A", b: "B", c: "C" })
+        expect(table.body.count).to  be_zero
+      end
+    end
+
+    context "Add body for string value" do
+      before do
+        table.tr do |tr|
+          tr.td "A"
+          tr.td "B"
+          tr.td "C"
+        end
+      end
+
+      it "Add body" do
+        expect(table.body[0].values).to eq(%w(A B C))
+        expect(table.body.count).to     eq(1)
+      end
+    end
+
+    context "Add body for Hash key value" do
+      before do
+        table.tr do |tr|
+          tr.td({ key: "a", value: "A" })
+          tr.td({ key: "b", value: "B" })
+          tr.td({ key: "c", value: "C" })
+        end
+      end
+
+      it "Add body" do
+        expect(table.body[0].to_h).to eq({ a: "A", b: "B", c: "C" })
+        expect(table.body.count).to   eq(1)
+      end
+    end
+
+    context "Add body for Hash" do
+      before do
+        table.tr do |tr|
+          tr.td a: "A"
+          tr.td b: "B"
+          tr.td c: "C"
+        end
+      end
+
+      it "Add body" do
+        expect(table.body[0].to_h).to eq({ a: "A", b: "B", c: "C" })
+        expect(table.body.count).to   eq(1)
+      end
+    end
+  end
 end

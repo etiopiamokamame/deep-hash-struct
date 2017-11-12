@@ -41,7 +41,7 @@ describe Deep::Hash::Struct::Dashboard do
         d.each do |rows|
           result = []
           rows.each do |r|
-            result << (r.header? || r.side? ? r.name : r.value)
+            result << (r.side_or_header? ? r.name : r.value)
           end
           results << result
         end
@@ -91,7 +91,7 @@ describe Deep::Hash::Struct::Dashboard do
         d.each do |rows|
           result = []
           rows.each do |r|
-            result << (r.header? || r.side? ? r.name : r.value)
+            result << (r.side_or_header? ? r.name : r.value)
           end
           results << result
         end
@@ -139,7 +139,7 @@ describe Deep::Hash::Struct::Dashboard do
         d.each do |rows|
           result = []
           rows.each do |r|
-            result << (r.header? || r.side? ? r.name : r.value)
+            result << (r.side_or_header? ? r.name : r.value)
           end
           results << result
         end
@@ -184,7 +184,7 @@ describe Deep::Hash::Struct::Dashboard do
         d.each do |rows|
           result = []
           rows.each do |r|
-            result << (r.header? || r.side? ? r.name : r.value)
+            result << (r.side_or_header? ? r.name : r.value)
           end
           results << result
         end
@@ -229,7 +229,7 @@ describe Deep::Hash::Struct::Dashboard do
         d.each do |rows|
           result = []
           rows.each do |r|
-            result << (r.header? || r.side? ? r.name : r.value)
+            result << (r.side_or_header? ? r.name : r.value)
           end
           results << result
         end
@@ -274,7 +274,7 @@ describe Deep::Hash::Struct::Dashboard do
         d.each do |rows|
           result = []
           rows.each do |r|
-            result << (r.header? || r.side? ? r.name : r.value)
+            result << (r.side_or_header? ? r.name : r.value)
           end
           results << result
         end
@@ -319,7 +319,7 @@ describe Deep::Hash::Struct::Dashboard do
         d.each do |rows|
           result = []
           rows.each do |r|
-            result << (r.header? || r.side? ? r.name : r.value)
+            result << (r.side_or_header? ? r.name : r.value)
           end
           results << result
         end
@@ -330,6 +330,163 @@ describe Deep::Hash::Struct::Dashboard do
         [4, 0, 6],
         [7, 8, 0]
       ])
+    end
+
+    it "Add simple table th and td to segment table" do
+      dashboard.add_table do |t|
+        t.tr do |tr|
+          tr.th "header1"
+          tr.th "header2"
+          tr.th "header3"
+        end
+
+        t.tr do |tr|
+          tr.td 1
+          tr.td 2
+          tr.td 3
+        end
+
+        t.tr do |tr|
+          tr.td 4
+          tr.td 5
+          tr.td 6
+        end
+
+        t.tr do |tr|
+          tr.td 7
+          tr.td 8
+          tr.td 9
+        end
+      end
+
+      expect(dashboard.tables.size).to     eq(1)
+      expect(dashboard.tables[0].class).to eq(Deep::Hash::Struct::Dashboard::Table)
+
+      result = "<table>\n"
+      dashboard.each do |t|
+        t.each do |tr|
+          result << "  <tr>\n"
+          tr.each do |cell|
+            if cell.side_or_header?
+              result << "    <th>#{cell.name}</th>"
+            else
+              result << "    <td>#{cell.value}</td>"
+            end
+            result << "\n"
+          end
+          result << "  </tr>\n"
+        end
+      end
+      result << "</table>\n"
+
+      expect(result).to eq(
+        <<~HTML
+          <table>
+            <tr>
+              <th>header1</th>
+              <th>header2</th>
+              <th>header3</th>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+            </tr>
+          </table>
+        HTML
+      )
+    end
+
+    it "Add simple table th and td to matrix table" do
+      dashboard.add_table(matrix: true) do |t|
+        t.tr do |tr|
+          tr.th "header1"
+          tr.th "header2"
+          tr.th "header3"
+        end
+
+        t.tr side: true do |tr|
+          tr.th "side1"
+          tr.td 1
+          tr.td 2
+          tr.td 3
+        end
+
+        t.tr side: true do |tr|
+          tr.th "side2"
+          tr.td 4
+          tr.td 5
+          tr.td 6
+        end
+
+        t.tr side: true do |tr|
+          tr.th "side3"
+          tr.td 7
+          tr.td 8
+          tr.td 9
+        end
+      end
+
+      expect(dashboard.tables.size).to     eq(1)
+      expect(dashboard.tables[0].class).to eq(Deep::Hash::Struct::Dashboard::Table)
+
+      result = "<table>\n"
+      dashboard.each do |t|
+        t.each do |tr|
+          result << "  <tr>\n"
+          tr.each do |cell|
+            if cell.side_or_header?
+              result << "    <th>#{cell.name}</th>"
+            else
+              result << "    <td>#{cell.value}</td>"
+            end
+            result << "\n"
+          end
+          result << "  </tr>\n"
+        end
+      end
+      result << "</table>\n"
+
+      expect(result).to eq(
+        <<~HTML
+          <table>
+            <tr>
+              <th></th>
+              <th>header1</th>
+              <th>header2</th>
+              <th>header3</th>
+            </tr>
+            <tr>
+              <th>side1</th>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+            </tr>
+            <tr>
+              <th>side2</th>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+            </tr>
+            <tr>
+              <th>side3</th>
+              <td>7</td>
+              <td>8</td>
+              <td>9</td>
+            </tr>
+          </table>
+        HTML
+      )
     end
   end
 
