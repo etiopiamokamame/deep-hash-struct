@@ -9,15 +9,19 @@ module Deep
           end
 
           def pretty_print(q)
-            q.group(2, "#(#{self.class.name}:#{sprintf("0x%x", object_id)} {", "})") do
-              q.breakable
-
-              q.group(2, "{", "}") do
+            if present?
+              q.group(2, "#(#{self.class.name}:#{sprintf("0x%x", object_id)} {", "})") do
                 q.breakable
-                pretty_print_cycle(q)
-              end
 
-              q.breakable
+                q.group(2, "{", "}") do
+                  q.breakable
+                  pretty_print_cycle(q)
+                end
+
+                q.breakable
+              end
+            else
+              q.text "#(#{self.class.name}:#{sprintf("0x%x", object_id)})"
             end
           end
 

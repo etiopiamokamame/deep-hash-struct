@@ -1,4 +1,5 @@
 require "deep/hash/struct/dashboard/table/row"
+require "deep/hash/struct/dashboard/table/tr"
 
 module Deep
   module Hash
@@ -55,9 +56,10 @@ module Deep
             end
 
             self.bodies = if matrix?
-                            merge_body = body.shift
+                            bs = Wrapper.new
+
                             body.size.times do
-                              bs.merge! body.shift
+                              bs.deep_merge! body.shift
                             end
 
                             sides.map do |s|
@@ -65,7 +67,7 @@ module Deep
                               rs << s
                               rs += headers.map do |h|
                                 next if h.side_header?
-                                v = merge_body.to_h.dig(h.value, s.value)
+                                v = bs.to_h.dig(h.value, s.value)
                                 v = v.nil? ? opt[:default] : v
                                 Row.new(value: v)
                               end.compact
@@ -105,6 +107,17 @@ module Deep
             end
           end
           alias collect map
+
+          def tr(options = {})
+            b             = Wrapper.new
+            opt[:side]    = options[:side] || false
+            opt[:matrix]  = matrix?
+            opt[:b_index] =  body.size
+
+            yield Tr.new(header, b, side, opt)
+            body << b unless b.count.zero?
+            self
+          end
 
           private
 

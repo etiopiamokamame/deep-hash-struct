@@ -4,7 +4,8 @@ module Deep
       class Wrapper
         include PP::Wrapper
 
-        attr_accessor :parent_ins,
+        attr_accessor :keys,
+                      :parent_ins,
                       :parent_key,
                       :chain
 
@@ -13,17 +14,12 @@ module Deep
         alias chain? chain
 
         def initialize(h = {}, opt = {})
+          self.keys       = []
           self.chain      = opt[:chain].nil? ? false : opt[:chain]
           self.parent_ins = opt[:parent_ins]
           self.parent_key = opt[:parent_key]
           return if h.nil? || h.count.zero?
           wrap h, self
-        end
-
-        def keys
-          instance_variables.reject { |k| k =~ /default|parent_ins|parent_key|chain/ }.map do |k|
-            k.to_s[1..-1].to_sym
-          end
         end
 
         def values
@@ -274,15 +270,20 @@ module Deep
         end
 
         def delete(k)
+          keys.delete k.to_sym
           remove_instance_variable "@#{k}"
         end
 
         def delete_if
-          each do |k, v|
-            remove_instance_variable "@#{k}" if yield(k, v)
+          del_keys = map do |k, v|
+            k if yield(k, v)
+          end.compact
+          del_keys.each do |k|
+            delete k
           end
           self
         end
+        alias reject! delete_if
 
         def find
           klass = self.class.new
@@ -318,13 +319,6 @@ module Deep
           klass
         end
 
-        def reject!
-          each do |k, v|
-            remove_instance_variable "@#{k}" if yield(k, v)
-          end
-          self
-        end
-
         def inject(init = 0)
           value = [Float, Fixnum].include?(init.class) ? init : init.dup
           each do |k, v|
@@ -337,10 +331,14 @@ module Deep
         alias reduce inject
 
         def clear
-          remove_instance_variable "@default" unless default.nil?
+          unless default.nil?
+            remove_instance_variable "@default"
+            keys.delete :default
+          end
           each_key do |k|
             remove_instance_variable "@#{k}"
           end
+          self.keys = []
           self
         end
 
@@ -384,7 +382,7 @@ module Deep
         end
 
         def shift
-          k = keys.first
+          k = keys.shift
           [k, remove_instance_variable("@#{k}")]
         end
 
@@ -397,7 +395,7 @@ module Deep
           klass = dup
 
           klass.each do |k, v|
-            klass.remove_instance_variable("@#{k}") if (v.class == self.class && v.blank?) || v.nil?
+            klass.delete(k) if (v.class == self.class && v.blank?) || v.nil?
           end
 
           klass
@@ -405,7 +403,7 @@ module Deep
 
         def compact!
           each do |k, v|
-            remove_instance_variable("@#{k}") if (v.class == self.class && v.blank?) || v.nil?
+            delete(k) if (v.class == self.class && v.blank?) || v.nil?
           end
 
           self
@@ -414,7 +412,7 @@ module Deep
         def deep_compact
           klass = deep_dup
 
-          klass.each do |k, v|
+          del_keys = klass.map do |k, v|
             flag  = if v.class == self.class
                       klass[k] = v.deep_compact
                       klass[k].present?
@@ -422,14 +420,18 @@ module Deep
                       !v.nil?
                     end
             next if flag
-            klass.remove_instance_variable("@#{k}")
+            k
+          end.compact
+
+          del_keys.each do |k|
+            klass.delete k
           end
 
           klass
         end
 
         def deep_compact!
-          each do |k, v|
+          del_keys = map do |k, v|
             flag  = if v.class == self.class
                       self[k] = v.deep_compact
                       self[k].present?
@@ -437,7 +439,11 @@ module Deep
                       !v.nil?
                     end
             next if flag
-            remove_instance_variable("@#{k}")
+            k
+          end.compact
+
+          del_keys.each do |k|
+            delete k
           end
 
           self
@@ -454,8 +460,12 @@ module Deep
         end
 
         def slice!(*syms)
-          each_key do |k|
-            remove_instance_variable("@#{k}") unless syms.map(&:to_sym).include?(k)
+          del_keys = keys.map do |k|
+            k unless syms.map(&:to_sym).include?(k)
+          end.compact
+
+          del_keys.each do |k|
+            delete k
           end
 
           self
@@ -503,6 +513,10 @@ module Deep
           end
         end
 
+        def dup
+          self.class.new(to_h)
+        end
+
         def deep_dup(klass = self)
           new_klass = self.class.new
 
@@ -520,8 +534,10 @@ module Deep
 
           if method_name.to_s.end_with? "="
             setting_chain_instance!(self, name, arg)
+            keys << name.to_sym unless keys.include?(name.to_sym)
           elsif block_given?
             __send__ "#{name}=", yield
+            keys << name.to_sym unless keys.include?(name.to_sym)
           else
             val = instance_variable_get "@#{name}"
             return val unless val.nil?
@@ -539,6 +555,7 @@ module Deep
 
         def setting_chain_instance!(klass, key, val)
           klass.instance_variable_set "@#{key}", hash?(val) && (!(self === val.class) || klass.chain?) ? wrap(val) : val
+          klass.keys << key.to_sym unless klass.keys.include?(key.to_sym)
           return val unless klass.chain?
           setting_chain_instance!(klass.parent_ins, klass.parent_key, klass)
         end
