@@ -19,6 +19,11 @@ Or install it yourself as:
 
     $ gem install deep-hash-struct
 
+## Supported Ruby Versions
+- 2.5.0
+- 2.4.1
+- 2.3.1
+
 ## Wrapper Class Usage
 The basic usage is the same as Hash Class.
 
