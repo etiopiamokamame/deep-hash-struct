@@ -1,6 +1,6 @@
-require "spec_helper"
+require 'rspec'
 
-describe Deep::Hash::Struct::Wrapper do
+RSpec.describe Deep::Hash::Struct::Wrapper do
   let(:wrapper) { described_class.new }
 
   describe "#initialize" do

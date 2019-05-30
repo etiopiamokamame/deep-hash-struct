@@ -1,6 +1,6 @@
-require "spec_helper"
+require "rspec"
 
-describe Deep::Hash::Struct::Dashboard::Table::Row do
+RSpec.describe Deep::Hash::Struct::Dashboard::Table::Row do
   before do
     @options = {}
   end

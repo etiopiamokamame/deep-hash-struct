@@ -1,6 +1,6 @@
-require "spec_helper"
+require 'rspec'
 
-describe Deep::Hash::Struct::Dashboard do
+RSpec.describe Deep::Hash::Struct::Dashboard do
   let(:dashboard) { described_class.new }
 
   describe "Add table" do
